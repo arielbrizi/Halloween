@@ -1,3 +1,4 @@
+import {photoFacade} from './photo-surfaces.js';
 import recoleta from '../assets/maps/recoleta.json';
 import obelisco from '../assets/maps/obelisco.json';
 import caminito from '../assets/maps/caminito.json';
@@ -11,16 +12,24 @@ export function buildMap(THREE,city,n,{box,sphere,cylinder,mat,sign,lamp}){
  for(const item of data.buildings){const p=item.points.map(a=>a.map(x=>x*scale));const cx=p.reduce((s,a)=>s+a[0],0)/p.length,cz=p.reduce((s,a)=>s+a[1],0)/p.length;const shape=new THREE.Shape();p.forEach((a,i)=>i?shape.lineTo(a[0],-a[1]):shape.moveTo(a[0],-a[1]));const h=Math.max(2,item.height*scale);const geometry=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false,steps:1});geometry.rotateX(-Math.PI/2);const colors=n===2?['#bc6950','#458b9b','#ba9a51','#956b93','#6d9575']:['#a3a497','#8b9390','#c2b6a1','#777f80','#b6afa2'];const color=/^#[0-9a-f]{6}$/i.test(item.color)?item.color:colors[item.id%colors.length];const mesh=new THREE.Mesh(geometry,mat(color));mesh.castShadow=true;mesh.receiveShadow=true;city.add(mesh);
  const roofGeom=new THREE.ShapeGeometry(shape);roofGeom.rotateX(-Math.PI/2);const roof=new THREE.Mesh(roofGeom,mat(n===2?'#72746d':'#64716f'));roof.position.y=h+.025;city.add(roof);
  const xs=p.map(a=>a[0]),zs=p.map(a=>a[1]);polygons.push({points:p,minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)});
- // OpenStreetMap footprints are real; facade details are procedural decoration.
+ // Photographic architectural details on close facades, with real OSM volumes.
+ if(n!==0&&Math.hypot(cx,cz)<100){for(let i=1;i<p.length;i++){const a=p[i-1],b=p[i],dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz);if(len<3||len>45)continue;const angle=-Math.atan2(dz,dx),height=h;for(const side of [-1,1])photoFacade(city,n,(a[0]+b[0])/2+dz/len*.065*side,height/2,(a[1]+b[1])/2-dx/len*.065*side,len,height,angle,n===2?[.005,.1,.47,.76]:[.606,.57,.79,.852]);
+ // Roof cornices and balconies retain parallax in front of the photograph.
+ const cornice=box(city,(a[0]+b[0])/2+dz/len*.1,height+.08,(a[1]+b[1])/2-dx/len*.1,len+.15,.16,.22,n===2?'#384a42':'#d0c7b4');cornice.rotation.y=angle;
+ if(n===2)for(let t=1;t<len-1;t+=2.7){const balcony=box(city,a[0]+dx*t/len+dz/len*.28,2.7,a[1]+dz*t/len-dx/len*.28,1.5,.13,.65,'#334647');balcony.rotation.y=angle;}
+ }}
+ // OpenStreetMap footprints are real; facade details are recreations.
  if(Math.hypot(cx,cz)<100){for(let i=1;i<p.length;i++){const a=p[i-1],b=p[i],dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz);if(len<2||len>150)continue;for(let t=1.2;t<len-1;t+=2.5){for(let y=1.5;y<h-.6;y+=2){if((item.id+Math.floor(t*3)+Math.floor(y))%4===0)continue;const m=box(city,a[0]+dx*t/len+dz/len*.03,y,a[1]+dz*t/len-dx/len*.03,.65,1,.06,(item.id+Math.floor(t))%3===0?'#efc58a':'#7c9da8',.4);m.rotation.y=-Math.atan2(dz,dx);}}}}
  }
  const blocked=(x,z,pad=0)=>polygons.some(o=>x>=o.minX-pad&&x<=o.maxX+pad&&z>=o.minZ-pad&&z<=o.maxZ+pad&&inside(x,z,o.points));
- if(n===1){const h=67.5*scale;const base=3.5*scale;box(city,0,.2,0,7,.4,7,'#b2b5aa');const monument=new THREE.Mesh(new THREE.CylinderGeometry(.22,base,h-3,4),mat('#e4dfca'));monument.rotation.y=Math.PI/4;monument.position.set(0,(h-3)/2+.4,0);monument.castShadow=true;city.add(monument);const tip=new THREE.Mesh(new THREE.ConeGeometry(.32,3,4),mat('#f0e7ce'));tip.rotation.y=Math.PI/4;tip.position.set(0,h-1.1,0);city.add(tip);box(city,0,1.6,base/Math.sqrt(2)+.04,.45,2,.08,'#52616a');obstacles.push({x:0,z:0,r:2.6});sign('AVENIDA 9 DE JULIO',-17,4.5,9,'#ebf0d0',1.2);sign('CORRIENTES',14,4,1,'#d5eac3',1);}
+ if(n===1){const h=67.5*scale,base=6.8*scale;box(city,0,.14,0,base+.6,.28,base+.6,'#c7c7b8');const monument=new THREE.Mesh(new THREE.CylinderGeometry(2.5/Math.sqrt(2),base/Math.sqrt(2),h-2.4,4),new THREE.MeshStandardMaterial({color:'#eee9d9',roughness:.85}));monument.rotation.y=Math.PI/4;monument.position.set(0,(h-2.4)/2+.28,0);monument.castShadow=true;city.add(monument);const tip=new THREE.Mesh(new THREE.ConeGeometry(2.5/Math.sqrt(2),2.4,4),new THREE.MeshStandardMaterial({color:'#eee9d9',roughness:.85}));tip.rotation.y=Math.PI/4;tip.position.set(0,h-1.2+.28,0);city.add(tip);box(city,0,1.6,base/2+.04,.45,2,.08,'#52616a');obstacles.push({x:0,z:0,r:2.6});sign('AVENIDA 9 DE JULIO',-17,4.5,9,'#ebf0d0',1.2);sign('CORRIENTES',14,4,1,'#d5eac3',1);}
  if(n===0){
  // Decorative mausoleums are placed between the actual mapped cemetery paths.
  const paths=data.roads.filter(r=>['footway','path','pedestrian'].includes(r.type));
  const nearPath=(x,z)=>paths.some(r=>r.points.some(p=>Math.hypot(p[0]*scale-x,p[1]*scale-z)<1.8));
- for(let x=-32;x<=32;x+=3.8)for(let z=-32;z<=32;z+=4.2){if(blocked(x,z)||nearPath(x,z)||Math.hypot(x,z-10)<3)continue;const k=Math.abs(Math.floor(x*19+z*7))%4,h=k===0?2.9:1.7;box(city,x,h/2,z,1.7,h,2.1,k===0?'#87918a':'#b1aca0');if(k===0){const roof=cylinder(city,x,h+.25,z,0,1.5,.7,'#a2aaa2',4);roof.rotation.y=Math.PI/4;box(city,x,1,z+1.07,.65,1.5,.05,'#273e41');}else{box(city,x,h+.45,z,.12,.8,.12,'#d0c8ae');box(city,x,h+.6,z,.6,.12,.12,'#d0c8ae');}obstacles.push({x,z,r:1.1});}
+ for(let x=-32;x<=32;x+=3.8)for(let z=-32;z<=32;z+=4.2){if(blocked(x,z)||nearPath(x,z)||Math.hypot(x,z-10)<3)continue;const k=Math.abs(Math.floor(x*19+z*7))%4,h=k===0?2.9:1.7;box(city,x,h/2,z,1.7,h,2.1,k===0?'#87918a':'#b1aca0');if(k===0){const roof=cylinder(city,x,h+.25,z,0,1.5,.7,'#a2aaa2',4);roof.rotation.y=Math.PI/4;box(city,x,1,z+1.07,.65,1.5,.05,'#273e41');}else{box(city,x,h+.45,z,.12,.8,.12,'#d0c8ae');box(city,x,h+.6,z,.6,.12,.12,'#d0c8ae');}photoFacade(city,0,x,h/2,z+1.065,1.68,h,0,k%2?[.22,.36,.37,.84]:[.438,.36,.64,.87]);
+ box(city,x-.85,h/2,z+1.12,.13,h,.2,'#c6c1b2');box(city,x+.85,h/2,z+1.12,.13,h,.2,'#c6c1b2');box(city,x,h+.05,z+1.12,1.94,.14,.25,'#cbc5b5');
+ obstacles.push({x,z,r:1.1});}
  sign('CEMENTERIO DE LA RECOLETA',0,4,-38,'#e8d5ac',1.6);
  }
  if(n===2){sign('CAMINITO',0,4,-12,'#ffe4a2',1.5);for(let x=-6;x<7;x+=2){const m=sphere(city,x,5,-10,.1,['#efb874','#dd9ad3','#adf4bc'][Math.abs(x)%3],2);}for(const o of data.buildings.filter(b=>b.name).slice(0,5)){const a=o.points[0];if(Math.hypot(...a)<140)sign(o.name.slice(0,22).toUpperCase(),a[0]*scale,4,a[1]*scale+.1,'#ede7cd',.8);}}

@@ -1,0 +1,38 @@
+[
+  {
+    "file": "obelisco.jpg",
+    "title": "File:Buenos Aires - Obelisco.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Buenos_Aires_-_Obelisco.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Buenos_Aires_-_Obelisco.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/72675636@N00\">Victoria Rachitzky</a> from Sao Paulo agora, Brasil",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "downloadedAt": "2026-10-23",
+    "sha256": "2b51c320aa21ed708642a347d7ddba5719526de09abb46e63b77c4af05a1e02b",
+    "runtimeChanges": "Downsampled to maximum 1280px in memory; selected UV regions applied to recreated facades. Original file unchanged."
+  },
+  {
+    "file": "recoleta.jpg",
+    "title": "File:Cementerio La Recoleta Bs As.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Cementerio_La_Recoleta_Bs_As.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Cementerio_La_Recoleta_Bs_As.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Elemaki\" title=\"User:Elemaki\">Elemaki</a>",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "downloadedAt": "2026-10-23",
+    "sha256": "ee815ef632b30b71498c4519a50d65830d5cbd959b946dbb7502ca1a174c6b44",
+    "runtimeChanges": "Downsampled to maximum 1280px in memory; selected UV regions applied to recreated facades. Original file unchanged."
+  },
+  {
+    "file": "caminito.jpg",
+    "title": "File:Casa en La Boca.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Casa_en_La_Boca.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Casa_en_La_Boca.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Kinkojim\" title=\"User:Kinkojim\">Kinkojim</a>",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "downloadedAt": "2026-10-23",
+    "sha256": "4c2375f4b17ebc29abfa08aa24a4112a41634590f15cf3f1bd1f0b2bbb7d0619",
+    "runtimeChanges": "Downsampled to maximum 1280px in memory; selected UV regions applied to recreated facades. Original file unchanged."
+  }
+]

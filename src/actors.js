@@ -29,3 +29,34 @@ export function createPhotoCompanion(atlas,index){
  root.userData.photoRig={bones,mesh,index,animate(time,moving,cast){const stride=Math.sin(time*9)*moving;bones[1].rotation.z=stride*.09;bones[2].rotation.z=-stride*.09;bones[3].rotation.z=-stride*.04+cast*.15;bones[4].rotation.z=stride*.04-cast*.4;mesh.position.y=Math.abs(stride)*.055;}};
  return root;
 }
+
+// Volumetric playable body: camera orbit never turns the actor. The supplied
+// photographic likeness is on the front of the head, never on the back.
+export function createPlayableHero(atlas,index){
+ const root=new THREE.Group(),body=new THREE.Group();root.add(body);
+ const cloth=new THREE.MeshStandardMaterial({color:index?'#221b32':'#15191e',roughness:.85}),skin=new THREE.MeshStandardMaterial({color:'#c99777',roughness:.8}),hair=new THREE.MeshStandardMaterial({color:index?'#977047':'#65503a',roughness:.95}),bone=new THREE.MeshStandardMaterial({color:index?'#a26fd5':'#d6d8cd',roughness:.8});
+ function ellipsoid(parent,x,y,z,sx,sy,sz,material){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.castShadow=true;parent.add(mesh);return mesh;}
+ function limb(x,y,length,radius){const pivot=new THREE.Group();pivot.position.set(x,y,0);body.add(pivot);ellipsoid(pivot,0,-length/2,0,radius,length/2,radius,cloth);return pivot;}
+ ellipsoid(body,0,1.6,0,.36,.52,.22,cloth);ellipsoid(body,0,2.14,0,.13,.16,.13,skin);
+ const head=new THREE.Group();head.position.y=2.42;body.add(head);ellipsoid(head,0,0,0,.29,.35,.25,skin);ellipsoid(head,0,.13,-.07,.30,.26,.24,hair);
+ if(index){ellipsoid(head,-.26,-.17,-.1,.09,.41,.18,hair);ellipsoid(head,.26,-.17,-.1,.09,.41,.18,hair);const brim=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.035,32),cloth);brim.position.y=.30;head.add(brim);const hat=new THREE.Mesh(new THREE.ConeGeometry(.27,.64,24),cloth);hat.position.set(.04,.62,0);hat.rotation.z=-.15;head.add(hat);const skirt=new THREE.Mesh(new THREE.ConeGeometry(.59,.85,32,1,true),cloth);skirt.position.y=1.03;body.add(skirt);}
+ const leftLeg=limb(-.18,1.12,.91,.13),rightLeg=limb(.18,1.12,.91,.13),leftArm=limb(-.43,1.99,.78,.105),rightArm=limb(.43,1.99,.78,.105);
+ for(const leg of [leftLeg,rightLeg]){ellipsoid(leg,0,-.89,.09,.15,.13,.25,cloth);if(!index)ellipsoid(leg,0,-.42,-.125,.035,.34,.018,bone);}
+ for(const arm of [leftArm,rightArm])ellipsoid(arm,0,-.78,0,.085,.11,.075,skin);
+ for(const side of [-1,1])ellipsoid(body,side*.31,1.95,0,.17,.19,.18,cloth);
+ ellipsoid(body,0,1.12,0,.29,.21,.19,cloth);
+ if(!index){ellipsoid(body,0,1.65,.225,.025,.30,.018,bone);for(let i=0;i<6;i++)for(const side of [-1,1]){const rib=ellipsoid(body,side*.115,1.43+i*.085,.215,.14,.024,.025,bone);rib.rotation.z=side*.2;}for(const leg of [leftLeg,rightLeg])ellipsoid(leg,0,-.42,.125,.035,.34,.018,bone);}
+ else{for(let i=0;i<5;i++)for(const side of [-1,1]){const lace=ellipsoid(body,0,1.47+i*.10,.23,.14,.012,.025,bone);lace.rotation.z=side*.4;}}
+ const weaponMaterial=new THREE.MeshStandardMaterial({color:index?'#c7b7d8':'#749377',metalness:.65,roughness:.3});
+ const weapon=new THREE.Mesh(new THREE.CylinderGeometry(index?.018:.065,index?.025:.08,index?.75:.44,12),weaponMaterial);weapon.position.set(0,-.71,.22);weapon.rotation.x=index?.2:Math.PI/2;rightArm.add(weapon);
+ ellipsoid(rightArm,0,index?-.33:-.71,index?.30:.45,index?.10:.06,index?.10:.06,index?.025:.06,bone);
+
+ if(!index){ellipsoid(body,0,1.6,-.225,.035,.4,.018,bone);for(let i=0;i<6;i++)ellipsoid(body,0,1.39+i*.09,-.215,.25-i*.015,.018,.032,bone);}else{for(const x of [-1,1]){const ribbon=ellipsoid(body,x*.11,1.49,-.23,.025,.32,.018,bone);ribbon.rotation.z=x*.3;}}
+ const texture=atlas.clone();texture.repeat.set(index?.091:.113,index?.19:.185);texture.offset.set(index?.685:.236,index?.704:.739);texture.needsUpdate=true;texture.userData.privateTexture=true;
+ const face=new THREE.Mesh(new THREE.SphereGeometry(.29,24,16,Math.PI*.18,Math.PI*.64,Math.PI*.20,Math.PI*.65),new THREE.MeshBasicMaterial({map:texture,toneMapped:false}));
+ // Sphere's selected patch is on +Z; crop coordinates come from the hero atlas.
+ face.scale.set(1,1.15,1);head.add(face);
+ const shadow=new THREE.Mesh(new THREE.CircleGeometry(.48,24),new THREE.MeshBasicMaterial({color:'#020609',transparent:true,opacity:.3,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;root.add(shadow);
+ root.userData.photoRig={index,mesh:body,bones:[leftLeg,rightLeg,leftArm,rightArm],volumetric:true,animate(time,moving,cast){const stride=Math.sin(time*9)*moving;leftLeg.rotation.x=stride*.6;rightLeg.rotation.x=-stride*.6;leftArm.rotation.x=-stride*.4;rightArm.rotation.x=stride*.4-cast*.9;body.position.y=Math.abs(stride)*.045;}};
+ return root;
+}

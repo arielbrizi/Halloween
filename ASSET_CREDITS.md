@@ -31,3 +31,13 @@ Fotografías proporcionadas por el usuario y nombres indicados por él en este c
 ## Motor y bibliotecas
 
 Three.js y sus módulos adicionales (GLTFLoader, SkeletonUtils, EffectComposer, UnrealBloomPass, RoomEnvironment y otros): licencia MIT, conservada en el bundle. esbuild (MIT) y Playwright (Apache 2.0) son herramientas de desarrollo, no descargas del juego en ejecución.
+
+## Fotografías reales de Buenos Aires
+
+Descargadas de Wikimedia Commons el 23 de octubre de 2026. Originales sin modificar en `assets/photos`; metadatos completos en `assets/photos/sources.json`. El juego selecciona regiones de estas fotografías mediante UV, reduce su resolución en memoria y las aplica a recreaciones de fachadas. Las ubicaciones y volúmenes provienen de OSM; la asignación de una fotografía a cada fachada es artística. No son escaneos 3D ni Google Maps.
+
+- **Buenos Aires - Obelisco** — Victoria Rachitzky — [original](https://commons.wikimedia.org/wiki/File:Buenos_Aires_-_Obelisco.jpg), [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/).
+- **Cementerio La Recoleta Bs As** — Elemaki — [original](https://commons.wikimedia.org/wiki/File:Cementerio_La_Recoleta_Bs_As.jpg), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+- **Casa en La Boca** — Kinkojim — [original](https://commons.wikimedia.org/wiki/File:Casa_en_La_Boca.jpg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). La fotografía y sus recortes/transformaciones visuales se distribuyen bajo la misma licencia CC BY-SA 4.0; no implica relicenciar el código del juego.
+
+- [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) 0.9.2 — Garrett Johnson y colaboradores, MIT. Árboles de aceleración para colisiones de cámara y disparos contra la ciudad estática.

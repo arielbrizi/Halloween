@@ -86,3 +86,17 @@ Las pruebas avanzan el tiempo de simulación de forma determinista para que el r
 El arranque es `npm start`, con Node.js 20 o posterior. `railway.json` define ese comando y el health check `/health`. El servidor usa automáticamente el `PORT` asignado por Railway; no fijar el puerto a 3000 en el comando del servicio. El HTML del juego ya está versionado, por lo que el arranque no requiere herramientas de compilación. Si se genera durante el build, instalar también las dependencias de desarrollo para ejecutar `npm run build`.
 
 `npm run test:server` comprueba el arranque con `PORT` dinámico, sin Python ni un PATH de herramientas, desde otro directorio; también valida el HTML completo, gzip y la respuesta de salud.
+
+### Controles en celular (vertical y horizontal)
+
+Joystick izquierdo con zona muerta: al llevarlo a fondo hacia adelante se corre. El pulgar derecho puede mirar arrastrando el escenario **o manteniendo y arrastrando DISPARAR**; moverse, apuntar y disparar funcionan simultáneamente. Los botones se redistribuyen al girar el teléfono, respetan las áreas seguras y dejan libre el centro. El botón ⛶ activa pantalla completa cuando el navegador lo permite. Cambiar de aplicación pausa y suelta todos los controles. Auto/Rendimiento desactiva sombras dinámicas y postprocesado para reducir el trabajo de GPU. Alto sigue disponible manualmente.
+
+Las fachadas incorporan detalles de fotografías reales de los tres barrios, junto con los volúmenes OSM y relieves 3D de cornisas/balcones. Créditos visibles en el menú y en [ASSET_CREDITS.md](ASSET_CREDITS.md). Son recreaciones con texturas fotográficas, no fotogrametría ni una equivalencia con PS4. La verificación móvil automatizada usa Chromium con pantalla táctil emulada; no mide FPS de un Samsung S25+ físico.
+
+El cuerpo del protagonista ahora es volumétrico y tiene una orientación independiente de la cámara. En reposo, arrastrar orbita alrededor sin hacer girar al personaje. Al moverse gira hacia el desplazamiento; al disparar apunta hacia la mira. La cara fotográfica aparece en el frente de la cabeza al rodearlo, con pelo y vestuario detrás. El acompañante conserva su representación fotográfica 2.5D; este modelo jugable tampoco es un escaneo humano.
+
+El inicio ofrece tarjetas con fotos para elegir escenario y botones Auto / Alto / Fluido para gráficos; ambas selecciones tienen estado accesible y funcionan por teclado o toque.
+
+Las intersecciones de cámara y disparos usan BVH (`three-mesh-bvh`) en las mallas grandes de la ciudad, construido al cargar cada distrito; evita recorrer todos los triángulos cada cuadro.
+
+Los disparos usan haces con núcleo claro, halo de color, destello en el origen e impacto persistente durante 180 ms; funcionan sin bloom. Mira de alto contraste con expansión al disparar y confirmación de impacto. Android compatible ofrece vibración optativa de disparo/daño/especial; se puede apagar en el menú y se detiene al pausar. **Safari en iPhone no ofrece `navigator.vibrate`**: el botón no se muestra y el juego conserva respuesta visual/sonora. Pantalla completa se ofrece solo cuando el navegador la admite. Se respetan safe areas y altura dinámica del navegador, incluido el cambio de orientación. Los tests cubren también la ausencia de vibración y fullscreen; no sustituyen una prueba física en iPhone/Safari.
