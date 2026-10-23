@@ -27,7 +27,7 @@ export function buildMap(THREE,city,n,{box,sphere,cylinder,mat,sign,lamp}){
  // Decorative mausoleums are placed between the actual mapped cemetery paths.
  const paths=data.roads.filter(r=>['footway','path','pedestrian'].includes(r.type));
  const nearPath=(x,z)=>paths.some(r=>r.points.some(p=>Math.hypot(p[0]*scale-x,p[1]*scale-z)<1.8));
- for(let x=-32;x<=32;x+=3.8)for(let z=-32;z<=32;z+=4.2){if(blocked(x,z)||nearPath(x,z)||Math.hypot(x,z-10)<3)continue;const k=Math.abs(Math.floor(x*19+z*7))%4,h=k===0?2.9:1.7;box(city,x,h/2,z,1.7,h,2.1,k===0?'#87918a':'#b1aca0');if(k===0){const roof=cylinder(city,x,h+.25,z,0,1.5,.7,'#a2aaa2',4);roof.rotation.y=Math.PI/4;box(city,x,1,z+1.07,.65,1.5,.05,'#273e41');}else{box(city,x,h+.45,z,.12,.8,.12,'#d0c8ae');box(city,x,h+.6,z,.6,.12,.12,'#d0c8ae');}photoFacade(city,0,x,h/2,z+1.065,1.68,h,0,k%2?[.22,.36,.37,.84]:[.438,.36,.64,.87]);
+ for(let x=-32;x<=32;x+=5.8)for(let z=-32;z<=32;z+=6.4){if(blocked(x,z)||nearPath(x,z)||Math.abs(x)<3||Math.abs(z-10)<3||Math.hypot(x,z-10)<7)continue;const k=Math.abs(Math.floor(x*19+z*7))%4,h=k===0?2.9:1.7;box(city,x,h/2,z,1.7,h,2.1,k===0?'#87918a':'#b1aca0');if(k===0){const roof=cylinder(city,x,h+.25,z,0,1.5,.7,'#a2aaa2',4);roof.rotation.y=Math.PI/4;box(city,x,1,z+1.07,.65,1.5,.05,'#273e41');}else{box(city,x,h+.45,z,.12,.8,.12,'#d0c8ae');box(city,x,h+.6,z,.6,.12,.12,'#d0c8ae');}photoFacade(city,0,x,h/2,z+1.065,1.68,h,0,k%2?[.22,.36,.37,.84]:[.438,.36,.64,.87]);
  box(city,x-.85,h/2,z+1.12,.13,h,.2,'#c6c1b2');box(city,x+.85,h/2,z+1.12,.13,h,.2,'#c6c1b2');box(city,x,h+.05,z+1.12,1.94,.14,.25,'#cbc5b5');
  obstacles.push({x,z,r:1.1});}
  sign('CEMENTERIO DE LA RECOLETA',0,4,-38,'#e8d5ac',1.6);
