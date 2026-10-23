@@ -16,3 +16,7 @@ Abrir el servidor desde el navegador. Para jugar en un teléfono de la misma red
 - Pausa: P, Escape o el botón superior.
 
 No necesita cuentas, claves ni compilación. Las fuentes web son opcionales y tienen alternativas locales. Las fotos se sirven localmente.
+
+## Abrir sin servidor
+
+`index.html` es autónomo: incluye estilos, imágenes y lógica. Descargar el archivo completo y abrirlo en Chrome, Firefox o Safari. No requiere conexión. Los archivos `style.css` y `game.js` se conservan como fuentes legibles; al modificarlos, actualizar también sus bloques integrados en `index.html`.
