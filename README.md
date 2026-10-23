@@ -42,7 +42,7 @@ El especial daña un área; el salto y el impulso ayudan a esquivar. Corazones r
 
 Iluminación nocturna, linterna, luces de calle, superficies con texturas, relieve de detalle, niebla, lluvia y materiales físicos. Modo Alto: bloom, reflejos aproximados de entorno y tratamiento de imagen. Modo Rendimiento: evita el posprocesado. Auto empieza según el dispositivo y reduce el costo si detecta fotogramas lentos. No se promete una tasa de cuadros para todos los equipos.
 
-Los brazos y armas en primera persona y los enemigos son 3D. El protagonista en tercera persona y el acompañante son **fotográficos 2.5D con rig**, para conservar el parecido de las referencias; los retratos muestran sus caras originales. No es un escaneo de los niños ni una producción con equivalencia técnica o artística garantizada a PlayStation 4. Ver [personajes](assets/CHARACTERS.md).
+Los brazos y armas en primera persona y los enemigos son 3D. El protagonista y el acompañante tienen cuerpos 3D articulados con texturas faciales basadas en las referencias; los retratos muestran sus caras originales. No es un escaneo de los niños ni una producción con equivalencia técnica o artística garantizada a PlayStation 4. Ver [personajes](assets/CHARACTERS.md).
 
 Los escenarios usan 934 contornos de edificios y 868 calles/senderos de OpenStreetMap, con alturas faltantes estimadas y detalles recreados. No es Google Maps 3D ni fotogrametría. El mapa mantiene atribución y enlace a la zona real. Ver [cartografía](assets/maps/SOURCES.md) y [créditos y licencias](ASSET_CREDITS.md).
 
@@ -60,7 +60,7 @@ npm start
 
 - `src/main.js`: partida, combate, equipo y progresión.
 - `src/controls.js`: mouse, teclado, touch y gamepad.
-- `src/actors.js`: modelos glTF, animaciones y rig fotográfico.
+- `src/actors.js`: modelos glTF, animaciones y cuerpos 3D articulados.
 - `src/viewmodel.js`: brazos, armas y animaciones en primera persona.
 - `src/presentation.js`: materiales, iluminación ambiental y posprocesado.
 - `src/navigation.js`: colisiones y navegación.
@@ -93,10 +93,12 @@ Joystick izquierdo con zona muerta: al llevarlo a fondo hacia adelante se corre.
 
 Las fachadas incorporan detalles de fotografías reales de los tres barrios, junto con los volúmenes OSM y relieves 3D de cornisas/balcones. Créditos visibles en el menú y en [ASSET_CREDITS.md](ASSET_CREDITS.md). Son recreaciones con texturas fotográficas, no fotogrametría ni una equivalencia con PS4. La verificación móvil automatizada usa Chromium con pantalla táctil emulada; no mide FPS de un Samsung S25+ físico.
 
-El cuerpo del protagonista ahora es volumétrico y tiene una orientación independiente de la cámara. En reposo, arrastrar orbita alrededor sin hacer girar al personaje. Al moverse gira hacia el desplazamiento; al disparar apunta hacia la mira. La cara fotográfica aparece en el frente de la cabeza al rodearlo, con pelo y vestuario detrás. El acompañante conserva su representación fotográfica 2.5D; este modelo jugable tampoco es un escaneo humano.
+El cuerpo del protagonista ahora es volumétrico y tiene una orientación independiente de la cámara. En reposo, arrastrar orbita alrededor sin hacer girar al personaje. Al moverse gira hacia el desplazamiento; al disparar apunta hacia la mira. La cara fotográfica aparece en el frente de la cabeza al rodearlo, con pelo y vestuario detrás. El acompañante usa también un cuerpo 3D articulado. Estos modelos son estilizados y no son escaneos humanos.
 
 El inicio ofrece tarjetas con fotos para elegir escenario y botones Auto / Alto / Fluido para gráficos; ambas selecciones tienen estado accesible y funcionan por teclado o toque.
 
 Las intersecciones de cámara y disparos usan BVH (`three-mesh-bvh`) en las mallas grandes de la ciudad, construido al cargar cada distrito; evita recorrer todos los triángulos cada cuadro.
 
 Los disparos usan haces con núcleo claro, halo de color, destello en el origen e impacto persistente durante 180 ms; funcionan sin bloom. Mira de alto contraste con expansión al disparar y confirmación de impacto. Android compatible ofrece vibración optativa de disparo/daño/especial; se puede apagar en el menú y se detiene al pausar. **Safari en iPhone no ofrece `navigator.vibrate`**: el botón no se muestra y el juego conserva respuesta visual/sonora. Pantalla completa se ofrece solo cuando el navegador la admite. Se respetan safe areas y altura dinámica del navegador, incluido el cambio de orientación. Los tests cubren también la ausencia de vibración y fullscreen; no sustituyen una prueba física en iPhone/Safari.
+
+Actualización de personajes: **ambos** integrantes del equipo usan cuerpos volumétricos, articulaciones de hombros/codos/caderas/rodillas, calzado y vestuario 3D. No se usan planos fotográficos de cuerpo entero dentro de la partida. El acompañante gira hacia su desplazamiento y hacia los enemigos al atacar. Las caras usan texturas del atlas; los retratos del menú/HUD usan las fotos originales. Son modelos estilizados creados en código, no modelos humanos escaneados o animación capturada.

@@ -22,6 +22,7 @@ window.__test={
  finishWave(){for(const e of enemies)removeObject(entities,e.mesh);enemies=[];defeated=spawned=quota();bossSpawned=true;update(.02);},
  hurt(){player.hp=1;player.inv=0;player.y=0;player.vy=0;this.clear();this.encounter({x:player.x,z:player.z,hp:100});},
  draw(){window.__queuedFrame?.(performance.now());},
+ heroPose(){return player.mesh.userData.photoRig.bones.map(b=>[b.rotation.x,b.userData.lower.rotation.x]);},
  diagnostics:()=>__nightDiagnostics()
 };`;
 const source=await readFile('src/main.js','utf8');
@@ -73,14 +74,14 @@ test('Standard gamepad mapping and high graphics render without external request
 
 test('Selected character is fully visible by default, animates and switches views on desktop and mobile',{timeout:180000},async()=>{
  for(const [mobile,hero,name,partner] of [[false,0,'Nahue','Delfi'],[true,1,'Delfi','Nahue']]){
-  const {context,page:p,errors}=await pageFor(mobile);await p.click('[data-place="1"]');await p.click(`[data-hero="${hero}"]`);await p.click('#play');let d=await state(p);assert(d.thirdPerson&&!d.firstPerson);assert.equal(d.selectedAvatar.name,name);assert(d.selectedAvatar.visible&&d.selectedAvatar.rigged);assert.equal(d.buddy.name,partner);const oldZ=d.selectedAvatar.z;await key(p,'KeyW',12);d=await state(p);assert(d.selectedAvatar.z<oldZ);assert.equal(d.selectedAvatar.z,d.z);await p.evaluate(()=>__test.draw());await p.screenshot({path:join(evidence,mobile?'third-person-mobile.png':'third-person-desktop.png')});
+  const {context,page:p,errors}=await pageFor(mobile);await p.click('[data-place="1"]');await p.click(`[data-hero="${hero}"]`);await p.click('#play');let d=await state(p);assert(d.thirdPerson&&!d.firstPerson);assert.equal(d.selectedAvatar.name,name);assert(d.selectedAvatar.visible&&d.selectedAvatar.rigged);assert.equal(d.buddy.name,partner);const oldZ=d.selectedAvatar.z,pose=await p.evaluate(()=>__test.heroPose());await key(p,'KeyW',12);assert.notDeepEqual(await p.evaluate(()=>__test.heroPose()),pose,'Articulated limbs change pose while walking');assert(d.buddy.volumetric);d=await state(p);assert(d.selectedAvatar.z<oldZ);assert.equal(d.selectedAvatar.z,d.z);await p.evaluate(()=>__test.draw());await p.screenshot({path:join(evidence,mobile?'third-person-mobile.png':'third-person-desktop.png')});
   if(mobile)await p.tap('#camera');else await p.keyboard.press('KeyV');assert((await state(p)).firstPerson);assert(!(await state(p)).selectedAvatar.visible);if(mobile)await p.tap('#camera');else await p.keyboard.press('KeyV');assert((await state(p)).thirdPerson);assert((await state(p)).selectedAvatar.visible);await key(p,'KeyX',12);assert((await state(p)).shots>0);assert.deepEqual(errors,[]);await context.close();
  }
 });
 
 
 test('Touch ergonomics: two-thumb fire/aim, body-independent orbit and rotation to landscape',{timeout:180000},async()=>{
- const {context,page:p,errors}=await pageFor(true);await p.setViewportSize({width:412,height:915});await p.click('[data-place="1"]');await p.click('#play');assert((await state(p)).selectedAvatar.volumetric);
+ const {context,page:p,errors}=await pageFor(true);await p.setViewportSize({width:412,height:915});await p.click('[data-place="1"]');await p.click('#play');assert((await state(p)).selectedAvatar.volumetric);assert((await state(p)).buddy.volumetric);
  const original=await state(p),cd=await context.newCDPSession(p);let f=await p.locator('#fire').boundingBox(),s=await p.locator('#stick').boundingBox();
  const fire={id:1,x:f.x+f.width/2,y:f.y+f.height/2},stick={id:2,x:s.x+s.width/2,y:s.y+s.height/2};
  await cd.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[fire,stick]});await cd.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...fire,x:fire.x-28,y:fire.y-14},{...stick,y:stick.y-38}]});await step(p,12);let d=await state(p);assert(d.shots>original.shots);assert.notEqual(d.yaw,original.yaw);assert.notEqual(d.z,original.z);await cd.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});

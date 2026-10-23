@@ -16,40 +16,27 @@ export function createEnemyActor(kind){
  let current=null;const controller={model,mixer,actions,height:target,state:'idle',play(state){if(current===actions[state])return;current?.fadeOut(.12);current=actions[state];current.reset().setEffectiveTimeScale(state==='run'?1.25:1).setEffectiveWeight(1).fadeIn(.12).play();controller.state=state;},update(dt){mixer.update(dt);},dispose(){mixer.stopAllAction();mixer.uncacheRoot(model);model.traverse(o=>{if(o.isMesh)o.material.dispose();});}};controller.play(kind==='runner'?'run':'walk');root.userData.actor=controller;return root;
 }
 
-// A segmented photographic rig keeps the supplied likeness readable. The body is
-// intentionally 2.5D; the enemy rigs and first-person arms are fully volumetric.
-export function createPhotoCompanion(atlas,index){
- const root=new THREE.Group(),texture=atlas.clone();texture.repeat.set(.5,1);texture.offset.set(index*.5,0);texture.needsUpdate=true;texture.userData.privateTexture=true;
- const geometry=new THREE.PlaneGeometry(2.1,2.8,20,36);geometry.translate(0,1.4,0);
- const bones=[new THREE.Bone(),new THREE.Bone(),new THREE.Bone(),new THREE.Bone(),new THREE.Bone()];bones[0].add(bones[1],bones[2],bones[3],bones[4]);bones[1].position.set(-.28,.85,0);bones[2].position.set(.28,.85,0);bones[3].position.set(-.52,1.9,0);bones[4].position.set(.52,1.9,0);
- const skin=[],weights=[],p=geometry.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i);let bone=0;if(y<1.15)bone=x<0?1:2;else if(y<2&&Math.abs(x)>.5)bone=x<0?3:4;const weight=bone===0?1:Math.min(1,Math.max(0,(bone<3?1.15-y:Math.abs(x)-.4)*3));skin.push(bone,0,0,0);weights.push(weight,1-weight,0,0);}
- geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(skin,4));geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
- const mesh=new THREE.SkinnedMesh(geometry,new THREE.MeshBasicMaterial({map:texture,transparent:true,alphaTest:.45,side:THREE.DoubleSide,toneMapped:false}));mesh.add(bones[0]);mesh.bind(new THREE.Skeleton(bones));mesh.frustumCulled=false;root.add(mesh);
- const shadow=new THREE.Mesh(new THREE.CircleGeometry(.5,24),new THREE.MeshBasicMaterial({color:0x04090e,transparent:true,opacity:.45,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;root.add(shadow);
- root.userData.photoRig={bones,mesh,index,animate(time,moving,cast){const stride=Math.sin(time*9)*moving;bones[1].rotation.z=stride*.09;bones[2].rotation.z=-stride*.09;bones[3].rotation.z=-stride*.04+cast*.15;bones[4].rotation.z=stride*.04-cast*.4;mesh.position.y=Math.abs(stride)*.055;}};
- return root;
-}
-
 // Volumetric playable body: camera orbit never turns the actor. The supplied
 // photographic likeness is on the front of the head, never on the back.
 export function createPlayableHero(atlas,index){
  const root=new THREE.Group(),body=new THREE.Group();root.add(body);
  const cloth=new THREE.MeshStandardMaterial({color:index?'#221b32':'#15191e',roughness:.85}),skin=new THREE.MeshStandardMaterial({color:'#c99777',roughness:.8}),hair=new THREE.MeshStandardMaterial({color:index?'#977047':'#65503a',roughness:.95}),bone=new THREE.MeshStandardMaterial({color:index?'#a26fd5':'#d6d8cd',roughness:.8});
  function ellipsoid(parent,x,y,z,sx,sy,sz,material){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),material);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.castShadow=true;parent.add(mesh);return mesh;}
- function limb(x,y,length,radius){const pivot=new THREE.Group();pivot.position.set(x,y,0);body.add(pivot);ellipsoid(pivot,0,-length/2,0,radius,length/2,radius,cloth);return pivot;}
+ function limb(x,y,length,radius){const pivot=new THREE.Group(),lower=new THREE.Group();pivot.position.set(x,y,0);body.add(pivot);ellipsoid(pivot,0,-length*.25,0,radius,length*.28,radius,cloth);lower.position.y=-length*.5;pivot.add(lower);ellipsoid(lower,0,-length*.24,0,radius*.88,length*.28,radius*.88,cloth);ellipsoid(pivot,0,-length*.5,0,radius*.92,radius*.92,radius*.92,cloth);pivot.userData.lower=lower;return pivot;}
+
  ellipsoid(body,0,1.6,0,.36,.52,.22,cloth);ellipsoid(body,0,2.14,0,.13,.16,.13,skin);
  const head=new THREE.Group();head.position.y=2.42;body.add(head);ellipsoid(head,0,0,0,.29,.35,.25,skin);ellipsoid(head,0,.13,-.07,.30,.26,.24,hair);
  if(index){ellipsoid(head,-.26,-.17,-.1,.09,.41,.18,hair);ellipsoid(head,.26,-.17,-.1,.09,.41,.18,hair);const brim=new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.035,32),cloth);brim.position.y=.30;head.add(brim);const hat=new THREE.Mesh(new THREE.ConeGeometry(.27,.64,24),cloth);hat.position.set(.04,.62,0);hat.rotation.z=-.15;head.add(hat);const skirt=new THREE.Mesh(new THREE.ConeGeometry(.59,.85,32,1,true),cloth);skirt.position.y=1.03;body.add(skirt);}
  const leftLeg=limb(-.18,1.12,.91,.13),rightLeg=limb(.18,1.12,.91,.13),leftArm=limb(-.43,1.99,.78,.105),rightArm=limb(.43,1.99,.78,.105);
- for(const leg of [leftLeg,rightLeg]){ellipsoid(leg,0,-.89,.09,.15,.13,.25,cloth);if(!index)ellipsoid(leg,0,-.42,-.125,.035,.34,.018,bone);}
- for(const arm of [leftArm,rightArm])ellipsoid(arm,0,-.78,0,.085,.11,.075,skin);
+ for(const leg of [leftLeg,rightLeg]){ellipsoid(leg.userData.lower,0,-.43,.09,.15,.13,.25,cloth);if(!index)ellipsoid(leg,0,-.42,-.125,.035,.34,.018,bone);}
+ for(const arm of [leftArm,rightArm])ellipsoid(arm.userData.lower,0,-.39,0,.085,.11,.075,skin);
  for(const side of [-1,1])ellipsoid(body,side*.31,1.95,0,.17,.19,.18,cloth);
  ellipsoid(body,0,1.12,0,.29,.21,.19,cloth);
  if(!index){ellipsoid(body,0,1.65,.225,.025,.30,.018,bone);for(let i=0;i<6;i++)for(const side of [-1,1]){const rib=ellipsoid(body,side*.115,1.43+i*.085,.215,.14,.024,.025,bone);rib.rotation.z=side*.2;}for(const leg of [leftLeg,rightLeg])ellipsoid(leg,0,-.42,.125,.035,.34,.018,bone);}
  else{for(let i=0;i<5;i++)for(const side of [-1,1]){const lace=ellipsoid(body,0,1.47+i*.10,.23,.14,.012,.025,bone);lace.rotation.z=side*.4;}}
  const weaponMaterial=new THREE.MeshStandardMaterial({color:index?'#c7b7d8':'#749377',metalness:.65,roughness:.3});
- const weapon=new THREE.Mesh(new THREE.CylinderGeometry(index?.018:.065,index?.025:.08,index?.75:.44,12),weaponMaterial);weapon.position.set(0,-.71,.22);weapon.rotation.x=index?.2:Math.PI/2;rightArm.add(weapon);
- ellipsoid(rightArm,0,index?-.33:-.71,index?.30:.45,index?.10:.06,index?.10:.06,index?.025:.06,bone);
+ const weapon=new THREE.Mesh(new THREE.CylinderGeometry(index?.018:.065,index?.025:.08,index?.75:.44,12),weaponMaterial);weapon.position.set(0,-.32,.22);weapon.rotation.x=index?.2:Math.PI/2;rightArm.userData.lower.add(weapon);
+ ellipsoid(rightArm.userData.lower,0,index?.06:-.32,index?.30:.45,index?.10:.06,index?.10:.06,index?.025:.06,bone);
 
  if(!index){ellipsoid(body,0,1.6,-.225,.035,.4,.018,bone);for(let i=0;i<6;i++)ellipsoid(body,0,1.39+i*.09,-.215,.25-i*.015,.018,.032,bone);}else{for(const x of [-1,1]){const ribbon=ellipsoid(body,x*.11,1.49,-.23,.025,.32,.018,bone);ribbon.rotation.z=x*.3;}}
  const texture=atlas.clone();texture.repeat.set(index?.091:.113,index?.19:.185);texture.offset.set(index?.685:.236,index?.704:.739);texture.needsUpdate=true;texture.userData.privateTexture=true;
@@ -57,6 +44,6 @@ export function createPlayableHero(atlas,index){
  // Sphere's selected patch is on +Z; crop coordinates come from the hero atlas.
  face.scale.set(1,1.15,1);head.add(face);
  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.48,24),new THREE.MeshBasicMaterial({color:'#020609',transparent:true,opacity:.3,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;root.add(shadow);
- root.userData.photoRig={index,mesh:body,bones:[leftLeg,rightLeg,leftArm,rightArm],volumetric:true,animate(time,moving,cast){const stride=Math.sin(time*9)*moving;leftLeg.rotation.x=stride*.6;rightLeg.rotation.x=-stride*.6;leftArm.rotation.x=-stride*.4;rightArm.rotation.x=stride*.4-cast*.9;body.position.y=Math.abs(stride)*.045;}};
+ root.userData.photoRig={index,mesh:body,bones:[leftLeg,rightLeg,leftArm,rightArm],volumetric:true,animate(time,moving,cast){const stride=Math.sin(time*9)*moving;leftLeg.rotation.x=stride*.6;rightLeg.rotation.x=-stride*.6;leftArm.rotation.x=-stride*.4;rightArm.rotation.x=stride*.4-cast*.9;leftLeg.userData.lower.rotation.x=Math.max(0,-stride)*.85;rightLeg.userData.lower.rotation.x=Math.max(0,stride)*.85;leftArm.userData.lower.rotation.x=-.22;rightArm.userData.lower.rotation.x=-.25-cast*.65;head.rotation.y=Math.sin(time*.7)*.04;body.position.y=Math.abs(stride)*.045+Math.sin(time*2)*.006;}};
  return root;
 }

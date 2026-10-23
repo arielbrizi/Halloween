@@ -18,7 +18,7 @@ Cada modelo incluye un rig y 16 clips. El juego usa Walk, Run_Arms, Idle_Attack,
 
 ## Delfi y Nahue
 
-Fotografías proporcionadas por el usuario y nombres indicados por él en este chat. Ver [procedencia de personajes](assets/CHARACTERS.md). Las dos fotos originales permanecen visibles en el HUD; el acompañante usa una recreación fotográfica con rig 2.5D. No se usaron fotografías de menores de fuentes públicas.
+Fotografías proporcionadas por el usuario y nombres indicados por él en este chat. Ver [procedencia de personajes](assets/CHARACTERS.md). Las dos fotos originales permanecen visibles en el HUD; ambos protagonistas usan cuerpos 3D estilizados con texturas faciales del atlas generado a partir de las referencias. No se usaron fotografías de menores de fuentes públicas.
 
 ## Superficies
 
