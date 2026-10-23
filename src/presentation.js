@@ -1,0 +1,29 @@
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+const materials=new Map(),textures={};
+function noiseTexture(){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),image=g.createImageData(128,128);let seed=12345;for(let i=0;i<image.data.length;i+=4){seed=(1664525*seed+1013904223)>>>0;const value=160+(seed>>>24)*.28;image.data[i]=image.data[i+1]=image.data[i+2]=value;image.data[i+3]=255;}g.putImageData(image,0,0);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;return t;}
+textures.noise=noiseTexture();
+function typeFor(color){if(['#3a4248','#172b39'].includes(color))return 'asphalt';if(['#aaa18a','#a3a19a'].includes(color))return 'paving';if(['#bc6950','#458b9b','#ba9a51','#956b93','#6d9575'].includes(color))return 'brick';return 'stone';}
+export function surfaceMaterial(color,emission=0){const key=color+':'+emission;if(materials.has(key))return materials.get(key);const kind=typeFor(color),road=kind==='asphalt';const m=new THREE.MeshStandardMaterial({color,roughness:road?.32:.8,metalness:road?.18:.04,emissive:color,emissiveIntensity:emission});m.userData.surface=kind;if(!emission){m.map=textures[kind]||textures.noise;m.bumpMap=m.map;m.bumpScale=road?.025:.055;m.envMapIntensity=road?.7:.18;}materials.set(key,m);return m;}
+export function installSurfaceAtlas(url){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{for(const [i,name] of ['asphalt','stone','brick','paving'].entries()){const c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d');g.drawImage(image,(i%2)*image.width/2,Math.floor(i/2)*image.height/2,image.width/2,image.height/2,0,0,512,512);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;textures[name]=t;}for(const m of materials.values())if(!m.emissiveIntensity){m.map=textures[m.userData.surface];m.bumpMap=m.map;m.needsUpdate=true;}resolve();};image.onerror=reject;image.src=url;});}
+
+export function createPresentation(renderer,scene,camera){
+ const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment(),environment=pmrem.fromScene(room,.04);scene.environment=environment.texture;scene.environmentIntensity=.35;room.dispose();pmrem.dispose();
+ const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.28,.5,1.05);composer.addPass(bloom);
+ const grade=new ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},hurt:{value:0}},vertexShader:'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform sampler2D tDiffuse;uniform float time;uniform float hurt;varying vec2 vUv;void main(){vec2 p=vUv-.5;float edge=dot(p,p);vec3 c=texture2D(tDiffuse,vUv).rgb;float grain=fract(sin(dot(vUv+time,vec2(12.9898,78.233)))*43758.5453)-.5;c*=1.-edge*.38;c+=grain*.008;c=mix(c,vec3(c.r*1.2,c.g*.45,c.b*.5),hurt*.16);gl_FragColor=vec4(c,1.);}'});composer.addPass(grade);composer.addPass(new OutputPass());
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(600,24,12),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,uniforms:{top:{value:new THREE.Color('#040b16')},bottom:{value:new THREE.Color('#2c4354')}},vertexShader:'varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'uniform vec3 top;uniform vec3 bottom;varying vec3 vP;void main(){float f=clamp(normalize(vP).y*.8+.15,0.,1.);gl_FragColor=vec4(mix(bottom,top,pow(f,.6)),1.);}'}));scene.add(sky);
+ const rainPositions=new Float32Array(600*3);for(let i=0;i<rainPositions.length;i+=3){rainPositions[i]=(Math.random()-.5)*42;rainPositions[i+1]=Math.random()*20;rainPositions[i+2]=(Math.random()-.5)*42;}const rainGeo=new THREE.BufferGeometry();rainGeo.setAttribute('position',new THREE.BufferAttribute(rainPositions,3));const rain=new THREE.Points(rainGeo,new THREE.PointsMaterial({color:'#b6d1e0',size:.035,transparent:true,opacity:.36,depthWrite:false}));rain.frustumCulled=false;scene.add(rain);
+ const streetLights=Array.from({length:3},()=>{const l=new THREE.PointLight('#ffc68b',18,20,2);scene.add(l);return l;});
+ let enabled=true,phase=0;
+ function setQuality(value){enabled=value==='high';renderer.setPixelRatio(Math.min(devicePixelRatio,enabled?1.5:1));renderer.shadowMap.enabled=true;composer.setPixelRatio(renderer.getPixelRatio());composer.setSize(innerWidth,innerHeight);bloom.strength=enabled?.28:0;}
+ function update(dt,{x,z,hurt=0,lamps=[]}){phase+=dt;grade.uniforms.time.value=phase;grade.uniforms.hurt.value=hurt;rain.position.set(x,0,z);for(let i=0;i<rainPositions.length;i+=3){rainPositions[i+1]-=dt*12;rainPositions[i]-=dt*.8;if(rainPositions[i+1]<0)rainPositions[i+1]=20;if(rainPositions[i]<-21)rainPositions[i]=21;}rainGeo.attributes.position.needsUpdate=true;const near=lamps.slice().sort((a,b)=>Math.hypot(a.x-x,a.z-z)-Math.hypot(b.x-x,b.z-z)).slice(0,3);streetLights.forEach((l,i)=>{const p=near[i];l.intensity=p?18:0;if(p)l.position.set(p.x,5.4,p.z);});}
+ function render(dt){if(enabled)composer.render(dt);else renderer.render(scene,camera);}
+ function resize(){composer.setSize(innerWidth,innerHeight);}
+ setQuality(matchMedia('(pointer:coarse)').matches?'performance':'high');return {update,render,resize,setQuality,get enabled(){return enabled;}};
+}

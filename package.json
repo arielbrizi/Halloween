@@ -1,1 +1,18 @@
-{"name":"buenos-aires-noche-zombie","version":"2.0.0","private":true,"type":"module","scripts":{"build":"node build.mjs","start":"python3 -m http.server 3000 --bind 0.0.0.0"},"dependencies":{"three":"0.180.0"},"devDependencies":{"esbuild":"0.25.11"}}
+{
+  "name": "buenos-aires-noche-zombie",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "python3 -m http.server 3000 --bind 0.0.0.0",
+    "test": "node --test --test-concurrency=1 tests/fps.test.mjs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11",
+    "playwright": "1.62.1"
+  }
+}
